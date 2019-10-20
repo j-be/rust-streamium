@@ -1,0 +1,14 @@
+[package]
+name = "streamium-db"
+version = "0.1.0"
+authors = ["Juri Berlanda <juriberlanda@hotmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+diesel = { version = "1.4.3", features = ["postgres"] }
+dotenv = "0.9.0"
+diesel-derive-enum = { version = "0.4.4", features = ["postgres"] }
+strum = "0.16.0"
+strum_macros = "0.16.0"
