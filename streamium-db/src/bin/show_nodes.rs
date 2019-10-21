@@ -16,7 +16,7 @@ fn main() {
     let connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
 
-    repo::create_stream(&connection, "My test Category", "Some URL");
+    repo::create_stream(&connection, "My test Category", "Some URL", Some(1));
     let results = repo::get_nodes(&connection, 5, 8);
 
     println!("Displaying {} nodes", results.len());

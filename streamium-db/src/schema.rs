@@ -9,5 +9,6 @@ table! {
         year -> Nullable<Int4>,
         node_type -> NodetypesMapping,
         album -> Nullable<Varchar>,
+        parent_id -> Nullable<Int4>,
     }
 }

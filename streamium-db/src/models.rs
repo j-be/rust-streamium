@@ -16,6 +16,7 @@ pub struct Node {
     pub year: Option<i32>,
     pub node_type: Nodetypes,
     pub album: Option<String>,
+    pub parent_id: Option<i32>,
 }
 
 #[derive(Insertable)]
@@ -24,4 +25,5 @@ pub struct SimpleNode<'a> {
     pub title: &'a str,
     pub url: &'a str,
     pub node_type: Nodetypes,
+    pub parent_id: Option<i32>,
 }
