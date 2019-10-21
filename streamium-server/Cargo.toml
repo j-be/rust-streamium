@@ -1,0 +1,20 @@
+[package]
+name = "streamium-server"
+version = "0.1.0"
+authors = ["Juri Berlanda <juriberlanda@hotmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rocket = "0.4.2"
+streamium-db = { path = "../streamium-db" }
+simple_xml_serialize = "0.2.1"
+quick-xml = "0.17.0"
+serde = "1.0.101"
+serde_derive = "1.0.101"
+
+[dependencies.rocket_contrib]
+version = "0.4.2"
+default-features = false
+features = ["diesel_postgres_pool", "json"]
