@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 rocket = "0.4.2"
 streamium-db = { path = "../streamium-db" }
+streamium-importer = { path = "../streamium-importer" }
 simple_xml_serialize = "0.2.1"
 quick-xml = "0.17.0"
 serde = "1.0.101"
