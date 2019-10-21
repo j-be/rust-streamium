@@ -1,5 +1,7 @@
 CREATE TYPE NodeTypes AS ENUM (
     'container',
+    'artist',
+    'album',
     'stream',
     'file'
 );
@@ -10,6 +12,7 @@ CREATE TABLE nodes (
     artist VARCHAR,
     year INTEGER,
     album VARCHAR,
+    track_number INTEGER,
     node_type NodeTypes NOT NULL,
     parent_id INTEGER REFERENCES nodes(id)
 );

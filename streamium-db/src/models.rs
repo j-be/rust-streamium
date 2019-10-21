@@ -3,6 +3,8 @@ use super::schema::nodes;
 #[derive(DbEnum, Debug, Display, Serialize, Deserialize)]
 pub enum Nodetypes {
     Container,
+    Artist,
+    Album,
     File,
     Stream
 }
@@ -15,6 +17,7 @@ pub struct Node {
     pub artist: Option<String>,
     pub year: Option<i32>,
     pub album: Option<String>,
+    pub track_number: Option<i32>,
     pub node_type: Nodetypes,
     pub parent_id: Option<i32>,
 }
@@ -37,5 +40,5 @@ pub struct FileNode<'a> {
     pub year: Option<i32>,
     pub node_type: Nodetypes,
     pub album: Option<&'a str>,
-    pub parent_id: Option<i32>,
+    pub track_number: Option<i32>,
 }
