@@ -1,17 +1,21 @@
 use crate::{StreamiumDbConn, NodeList};
 use streamium_db::models::{Node, Nodetypes};
 use streamium_db::repo;
+use rocket::Data;
 use rocket::response::Responder;
 use rocket::{Response, Request};
 use rocket::http::{ContentType, Status};
-use std::io::Cursor;
+use std::io::{Cursor, Read};
 use quick_xml::events::Event;
 use simple_xml_serialize::XMLElement;
 use quick_xml::Reader;
 
 #[post("/", data = "<request_data>")]
-pub fn get_nodes(conn: StreamiumDbConn, request_data: String) -> NodeList {
-    let nav_data = parse_request_data(request_data);
+pub fn get_nodes(conn: StreamiumDbConn, request_data: Data) -> NodeList {
+    let mut data_str : String = String::new();
+    request_data.open().read_to_string(&mut data_str)
+        .expect("Failed to read request data");
+    let nav_data = parse_request_data(data_str);
     println!("{:?}", nav_data);
     return NodeList{
         nodes: repo::get_nodes(&*conn, nav_data.nodeid, nav_data.fromindexelem, nav_data.numelem),
