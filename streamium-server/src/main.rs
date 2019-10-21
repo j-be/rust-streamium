@@ -13,7 +13,9 @@ mod streamium_handler;
 
 #[derive(Serialize)]
 pub struct NodeList {
-    nodes: Vec<Node>
+    nodes: Vec<Node>,
+    totnumelem: i64,
+    fromindex: i64,
 }
 
 #[database("streamium_db")]

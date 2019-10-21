@@ -13,26 +13,38 @@ use quick_xml::Reader;
 pub fn get_nodes(conn: StreamiumDbConn, request_data: String) -> NodeList {
     let nav_data = parse_request_data(request_data);
     println!("{:?}", nav_data);
-    return NodeList{ nodes: repo::get_nodes(&*conn, 0, nav_data.numelem)};
+    return NodeList{
+        nodes: repo::get_nodes(&*conn, nav_data.nodeid, nav_data.fromindexelem, nav_data.numelem),
+        totnumelem: repo::get_node_count(&*conn, nav_data.nodeid),
+        fromindex: 0,
+    };
 }
 
 #[derive(Debug)]
 struct RequestNavData {
     service_id: i32,
     numelem: i64,
+    nodeid: i32,
+    fromindexelem: i64,
 }
 
 impl<'r> Responder<'r> for NodeList {
     fn respond_to(self, _: &Request) -> Result<Response<'static>, Status> {
+        let mut root = nodes_to_xml(&self.nodes);
+
+        root.add_element(forge_xml_element("totnumelem", self.totnumelem.to_string()));
+        root.add_element(forge_xml_element("fromindex", self.fromindex.to_string()));
+        root.add_element(forge_xml_element("numelem", self.nodes.len().to_string()));
+
         Response::build()
             .header(ContentType::XML)
-            .sized_body(Cursor::new(nodes_to_xml(&self.nodes).to_string()))
+            .sized_body(Cursor::new(root.to_string()))
             .ok()
     }
 }
 
 fn parse_request_data(request_data: String) -> RequestNavData {
-    let mut nav_data = RequestNavData {service_id: 0, numelem: 0};
+    let mut nav_data = RequestNavData {service_id: 0, numelem: 0, nodeid: -1, fromindexelem: 0 };
 
     let request_param_str: String = request_data.split("=").skip(2).collect();
     let mut reader = Reader::from_str(request_param_str.as_str());
@@ -57,6 +69,22 @@ fn parse_request_data(request_data: String) -> RequestNavData {
                         match reader.read_event(&mut buf) {
                             Ok(Event::Text(e)) => {
                                 nav_data.numelem = e.unescape_and_decode(&reader).unwrap().parse().unwrap();
+                            },
+                            _ => panic!("Expected text in numelement at position {}", reader.buffer_position()),
+                        }
+                    },
+                    b"nodeid" => {
+                        match reader.read_event(&mut buf) {
+                            Ok(Event::Text(e)) => {
+                                nav_data.nodeid = e.unescape_and_decode(&reader).unwrap().parse().unwrap();
+                            },
+                            _ => panic!("Expected text in serviceid at position {}", reader.buffer_position()),
+                        }
+                    },
+                    b"fromindexelem" => {
+                        match reader.read_event(&mut buf) {
+                            Ok(Event::Text(e)) => {
+                                nav_data.fromindexelem = e.unescape_and_decode(&reader).unwrap().parse().unwrap();
                             },
                             _ => panic!("Expected text in numelement at position {}", reader.buffer_position()),
                         }
@@ -87,12 +115,6 @@ fn nodes_to_xml(nodes: &Vec<Node>) -> XMLElement {
             _ => root.add_element(node_to_xml(&node))
         }
     }
-
-    // TODO: Fix
-
-    root.add_element(forge_xml_element("totnumelem", "3".to_string()));
-    root.add_element(forge_xml_element("fromindex", "0".to_string()));
-    root.add_element(forge_xml_element("numelem", nodes.len().to_string()));
 
     return root;
 }

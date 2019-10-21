@@ -2,12 +2,39 @@ use diesel::{PgConnection, prelude::*, QueryDsl, QueryResult, RunQueryDsl};
 
 use crate::models::{Node, Nodetypes, SimpleNode};
 use crate::schema::nodes::dsl::*;
+use diesel::expression::dsl::count;
 
-pub fn get_nodes(conn: &PgConnection, offset: i64, limit: i64) -> Vec<Node> {
+pub fn get_nodes(conn: &PgConnection, parent: i32, offset: i64, limit: i64) -> Vec<Node> {
+    if parent < 0 {
+        return nodes
+            .filter(parent_id.is_null())
+            .offset(offset)
+            .limit(limit)
+            .load::<Node>(conn)
+            .expect("Error loading nodes");
+    }
+
     nodes
+        .filter(parent_id.eq(parent))
         .offset(offset)
         .limit(limit)
         .load::<Node>(conn)
+        .expect("Error loading nodes")
+}
+
+pub fn get_node_count(conn: &PgConnection,  parent: i32) -> i64 {
+    if parent < 0 {
+        return nodes
+            .select(count(id))
+            .filter(parent_id.is_null())
+            .first(conn)
+            .expect("Error loading nodes");
+    }
+
+    nodes
+        .select(count(id))
+        .filter(parent_id.eq(parent))
+        .first(conn)
         .expect("Error loading nodes")
 }
 
