@@ -3,22 +3,23 @@ extern crate id3;
 extern crate streamium_db;
 
 use std::fs;
+use std::io;
 
 use diesel::PgConnection;
 
 use streamium_db::repo;
+use std::path::Path;
+use std::fs::DirEntry;
 
 pub fn import(conn: &PgConnection) {
-    let paths = fs::read_dir("/home/juri/Music/Tool/2006 - 10,000 Days").unwrap();
-
-    let artist_root = repo::get_artist_root(conn);
+    let mp3_dir = "/home/juri/Music/";
 
     repo::delete_all_files(conn);
-    for path in paths {
-        let tag = id3::Tag::read_from_path(path.unwrap().path()).unwrap();
-        repo::create_file(conn, tag.title().unwrap(), "", tag.artist(), tag.year(), tag.album(), None);
-    }
 
+    visit_dirs(Path::new(mp3_dir), conn, &create_file_for_path)
+        .expect("Error on import");
+
+    let artist_root = repo::get_artist_root(conn);
     for artist in repo::get_all_artists(conn) {
         let artist_node = repo::create_container(conn, artist.as_str(), Some(artist_root.id));
         for album in repo::get_albums_for_artist(conn, artist.as_str()) {
@@ -26,4 +27,34 @@ pub fn import(conn: &PgConnection) {
             repo::update_all_files(conn, &artist_node, &album_node);
         }
     }
+}
+
+fn create_file_for_path(path: &DirEntry, conn: &PgConnection) {
+    if id3::Tag::read_from_path(path.path()).is_ok() {
+        let tag = id3::Tag::read_from_path(path.path()).unwrap();
+        if tag.title().is_some() {
+            repo::create_file(conn,
+                              tag.title().unwrap(), "",
+                              tag.artist(), tag.year(), tag.album(),
+                              None);
+        } else {
+            println!("Not importig {:?}", path)
+        }
+    }
+}
+
+// one possible implementation of walking a directory only visiting files
+fn visit_dirs(dir: &Path, conn: &PgConnection, cb: &dyn Fn(&DirEntry, &PgConnection)) -> io::Result<()> {
+    if dir.is_dir() {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                visit_dirs(&path, conn, cb)?;
+            } else {
+                cb(&entry, conn);
+            }
+        }
+    }
+    Ok(())
 }
