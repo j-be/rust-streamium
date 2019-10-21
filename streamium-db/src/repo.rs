@@ -7,7 +7,7 @@ use diesel::expression::dsl::count;
 pub fn get_nodes(conn: &PgConnection, parent: i32, offset: i64, limit: i64) -> Vec<Node> {
     if parent < 0 {
         return nodes
-            .filter(parent_id.is_null())
+            .filter(node_type.eq(Nodetypes::Container))
             .offset(offset)
             .limit(limit)
             .load::<Node>(conn)
@@ -26,7 +26,7 @@ pub fn get_node_count(conn: &PgConnection,  parent: i32) -> i64 {
     if parent < 0 {
         return nodes
             .select(count(id))
-            .filter(parent_id.is_null())
+            .filter(node_type.eq(Nodetypes::Container))
             .first(conn)
             .expect("Error loading nodes");
     }
