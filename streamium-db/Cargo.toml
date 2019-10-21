@@ -12,3 +12,5 @@ dotenv = "0.9.0"
 diesel-derive-enum = { version = "0.4.4", features = ["postgres"] }
 strum = "0.16.0"
 strum_macros = "0.16.0"
+serde = "1.0.101"
+serde_derive = "1.0.101"

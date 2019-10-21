@@ -1,13 +1,13 @@
 use super::schema::nodes;
 
-#[derive(DbEnum, Debug, Display)]
+#[derive(DbEnum, Debug, Display, Serialize, Deserialize)]
 pub enum Nodetypes {
     Container,
     File,
     Stream
 }
 
-#[derive(Queryable)]
+#[derive(Queryable, Serialize, Deserialize)]
 pub struct Node {
     pub id: i32,
     pub title: String,
