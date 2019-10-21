@@ -106,6 +106,13 @@ fn forge_xml_element(name: &str, content: String) -> XMLElement {
     return element;
 }
 
+fn forge_optional_xml_element(name: &str, content: Option<&String>) -> XMLElement {
+    if content.is_some() {
+        return forge_xml_element(name, content.unwrap().to_string());
+    }
+    return XMLElement::new(name);
+}
+
 fn nodes_to_xml(nodes: &Vec<Node>) -> XMLElement {
     let mut root = XMLElement::new("contentdataset");
     for node in nodes {
@@ -137,7 +144,7 @@ fn stream_to_xml(node: &Node) -> XMLElement {
     root.add_element(forge_xml_element("name", node.title.to_string()));
     root.add_element(forge_xml_element("title", node.title.to_string()));
     // TODO: URL prefix
-    root.add_element(forge_xml_element("url", node.url.to_string()));
+    root.add_element(forge_optional_xml_element("url", node.url.as_ref()));
     root.add_element(forge_xml_element("nodeid", node.id.to_string()));
     root.add_element(XMLElement::new("playable"));
 
@@ -147,22 +154,14 @@ fn stream_to_xml(node: &Node) -> XMLElement {
 fn file_to_xml(node: &Node) -> XMLElement {
     let mut root: XMLElement = XMLElement::new("contentdata");
 
-    if node.album.is_some() {
-        root.add_element(forge_xml_element("album", node.album.as_ref().unwrap().to_string()));
-    } else {
-        root.add_element(forge_xml_element("album", "".to_string()));
-    }
+    root.add_element(forge_optional_xml_element("album", node.album.as_ref()));
     root.add_element(forge_xml_element("genre", "".to_string()));
     root.add_element(forge_xml_element("name", node.title.to_string()));
     root.add_element(forge_xml_element("playlength", "100".to_string()));
     root.add_element(forge_xml_element("title", node.title.to_string()));
     // TODO: URL prefix
-    root.add_element(forge_xml_element("url", node.url.to_string()));
-    if node.artist.is_some() {
-        root.add_element(forge_xml_element("artist", node.artist.as_ref().unwrap().to_string()));
-    } else {
-        root.add_element(forge_xml_element("artist", "".to_string()));
-    }
+    root.add_element(forge_optional_xml_element("url", node.url.as_ref()));
+    root.add_element(forge_optional_xml_element("artist", node.artist.as_ref()));
     root.add_element(forge_xml_element("nodeid", node.id.to_string()));
     root.add_element(XMLElement::new("playable"));
 
