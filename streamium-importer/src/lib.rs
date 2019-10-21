@@ -27,12 +27,20 @@ pub fn import(conn: &PgConnection) {
             repo::update_all_files(conn, &artist_node, &album_node);
         }
     }
+
+    for artist in repo::get_no_album_artists(conn) {
+        let artist_node = repo::get_artist(conn, artist.as_str());
+        let album_node = repo::create_album(conn, "<Unknown Album>", Some(artist_node.id));
+        for file in repo::get_no_album_tracks_for_artist(conn, artist.as_str()) {
+            repo::attach_file_to_node(conn, &file, &album_node);
+        }
+    }
 }
 
 fn create_file_for_path(path: &DirEntry, conn: &PgConnection) {
     if id3::Tag::read_from_path(path.path()).is_ok() {
         let tag = id3::Tag::read_from_path(path.path()).unwrap();
-        if tag.title().is_some() {
+        if tag.title().is_some() && tag.artist().is_some() {
             let mut track_number: Option<i32> = None;
             if tag.track().is_some() {
                 track_number = Some(tag.track().unwrap() as i32);

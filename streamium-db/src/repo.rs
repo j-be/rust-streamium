@@ -81,6 +81,20 @@ pub fn get_artist_root(conn: &PgConnection) -> Node {
         .expect("Cannot find Artists root")
 }
 
+pub fn get_no_album_artists(conn: &PgConnection) -> Vec<String> {
+    use crate::schema::nodes;
+
+    nodes::table.select(artist)
+        .filter(node_type.eq(Nodetypes::File)
+            .and(parent_id.is_null()))
+        .distinct()
+        .load::<Option<String>>(conn)
+        .expect("Error loading artists")
+        .into_iter()
+        .map(|a| a.unwrap())
+        .collect()
+}
+
 pub fn get_albums_for_artist(conn: &PgConnection, filter_artist: &str) -> Vec<String> {
     use crate::schema::nodes;
 
@@ -94,6 +108,23 @@ pub fn get_albums_for_artist(conn: &PgConnection, filter_artist: &str) -> Vec<St
         .into_iter()
         .map(|a| a.unwrap())
         .collect()
+}
+
+pub fn get_artist(conn: &PgConnection, filter_artist: &str) -> Node {
+    nodes
+        .filter(node_type.eq(Nodetypes::Artist)
+            .and(title.eq(filter_artist)))
+        .first(conn)
+        .expect("Failed to find artist")
+}
+
+pub fn get_no_album_tracks_for_artist(conn: &PgConnection, filter_artist: &str) -> Vec<Node> {
+    nodes
+        .filter(node_type.eq(Nodetypes::File)
+            .and(artist.eq(filter_artist))
+            .and(parent_id.is_null()))
+        .load(conn)
+        .expect("Failed to find artist")
 }
 
 pub fn create_album(conn: &PgConnection, new_title: &str, new_parent_id: Option<i32>) -> Node {
