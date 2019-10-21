@@ -8,5 +8,6 @@ table! {
         artist -> Nullable<Varchar>,
         year -> Nullable<Int4>,
         node_type -> NodetypesMapping,
+        album -> Nullable<Varchar>,
     }
 }

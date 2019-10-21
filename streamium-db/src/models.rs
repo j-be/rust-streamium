@@ -15,6 +15,7 @@ pub struct Node {
     pub artist: Option<String>,
     pub year: Option<i32>,
     pub node_type: Nodetypes,
+    pub album: Option<String>,
 }
 
 #[derive(Insertable)]
