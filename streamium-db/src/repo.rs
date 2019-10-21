@@ -1,6 +1,6 @@
 use diesel::{PgConnection, prelude::*, QueryDsl, QueryResult, RunQueryDsl};
 
-use crate::models::{Node, Nodetypes, SimpleNode};
+use crate::models::{Node, Nodetypes, SimpleNode, FileNode};
 use crate::schema::nodes::dsl::*;
 use diesel::expression::dsl::count;
 
@@ -52,15 +52,58 @@ pub fn get_nodes_by_parent(conn: &PgConnection, parent: i32) -> Vec<Node> {
         .expect("Error loading nodes")
 }
 
-pub fn create_container(conn: &PgConnection, new_title: &str, new_url: &str, new_parent_id: Option<i32>) {
-    create_simple_node(conn, new_title, new_url, Nodetypes::Container, new_parent_id)
+pub fn get_all_artists(conn: &PgConnection) -> Vec<String> {
+    use crate::schema::nodes;
+
+    nodes::table.select(artist)
+        .filter(node_type.eq(Nodetypes::File)
+            .and(artist.is_not_null()))
+        .distinct()
+        .load::<Option<String>>(conn)
+        .expect("Error loading artists")
+        .into_iter()
+        .map(|a| a.unwrap())
+        .collect()
 }
 
-pub fn create_stream(conn: &PgConnection, new_title: &str, new_url: &str, new_parent_id: Option<i32>) {
+pub fn delete_all_files(conn: &PgConnection) {
+    diesel::delete(
+        nodes.filter(parent_id.is_not_null().and(node_type.ne(Nodetypes::Stream))))
+        .execute(conn)
+        .expect("Error deleting files");
+}
+
+pub fn get_artist_root(conn: &PgConnection) -> Node {
+    nodes
+        .filter(title.eq("Artists"))
+        .first(conn)
+        .expect("Cannot find Artists root")
+}
+
+pub fn get_albums_for_artist(conn: &PgConnection, filter_artist: &str) -> Vec<String> {
+    use crate::schema::nodes;
+
+    nodes::table.select(album)
+        .filter(artist.eq(filter_artist)
+            .and(node_type.eq(Nodetypes::File))
+            .and(album.is_not_null()))
+        .distinct()
+        .load::<Option<String>>(conn)
+        .expect("Error loading album for artists")
+        .into_iter()
+        .map(|a| a.unwrap())
+        .collect()
+}
+
+pub fn create_container(conn: &PgConnection, new_title: &str, new_parent_id: Option<i32>) -> Node {
+    create_simple_node(conn, new_title, None, Nodetypes::Container, new_parent_id)
+}
+
+pub fn create_stream(conn: &PgConnection, new_title: &str, new_url: Option<&str>, new_parent_id: Option<i32>) -> Node {
     create_simple_node(conn, new_title, new_url, Nodetypes::Stream, new_parent_id)
 }
 
-fn create_simple_node(conn: &PgConnection, new_title: &str, new_url: &str, new_node_type: Nodetypes, new_parent_id: Option<i32>) {
+fn create_simple_node(conn: &PgConnection, new_title: &str, new_url: Option<&str>, new_node_type: Nodetypes, new_parent_id: Option<i32>) -> Node {
     use crate::schema::nodes;
 
     let new_simple_node = SimpleNode {
@@ -72,5 +115,47 @@ fn create_simple_node(conn: &PgConnection, new_title: &str, new_url: &str, new_n
     let result = diesel::insert_into(nodes::table)
         .values(&new_simple_node)
         .get_result(conn) as QueryResult<Node>;
+    result.expect("Error saving new Node")
+}
+
+pub fn create_file(
+    conn: &PgConnection,
+    new_title: &str,
+    new_url: &str,
+    new_artist: Option<&str>,
+    new_year: Option<i32>,
+    new_album: Option<&str>,
+    new_parent_id: Option<i32>)
+{
+    use crate::schema::nodes;
+
+    let new_file_node = FileNode {
+        title: new_title,
+        url: new_url,
+        artist: new_artist,
+        year: new_year,
+        node_type: Nodetypes::File,
+        album: new_album,
+        parent_id: new_parent_id,
+    };
+    let result = diesel::insert_into(nodes::table)
+        .values(&new_file_node)
+        .get_result(conn) as QueryResult<Node>;
     result.expect("Error saving new Node");
+}
+
+pub fn update_all_files(conn: &PgConnection, artist_node: &Node, album_node: &Node) {
+    let files_to_update: Vec<Node> = nodes
+        .filter(artist.eq(artist_node.title.as_str())
+            .and(album.eq(album_node.title.as_str()))
+            .and(node_type.eq(Nodetypes::File)))
+        .load::<Node>(conn)
+        .expect("Error loading files for album and artist");
+
+    for file in files_to_update {
+        diesel::update(&file)
+            .set(parent_id.eq(album_node.id))
+            .execute(conn)
+            .expect("Error updating file");
+    }
 }

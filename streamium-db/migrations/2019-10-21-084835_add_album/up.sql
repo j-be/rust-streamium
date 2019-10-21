@@ -1,1 +1,0 @@
-ALTER TABLE nodes ADD album VARCHAR;

@@ -4,11 +4,11 @@ table! {
     nodes (id) {
         id -> Int4,
         title -> Varchar,
-        url -> Varchar,
+        url -> Nullable<Varchar>,
         artist -> Nullable<Varchar>,
         year -> Nullable<Int4>,
-        node_type -> NodetypesMapping,
         album -> Nullable<Varchar>,
+        node_type -> NodetypesMapping,
         parent_id -> Nullable<Int4>,
     }
 }
