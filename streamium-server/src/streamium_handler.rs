@@ -132,30 +132,39 @@ fn node_to_xml(node: &Node) -> XMLElement {
 }
 
 fn stream_to_xml(node: &Node) -> XMLElement {
-    let mut root: XMLElement = node_to_xml(node);
+    let mut root: XMLElement = XMLElement::new("contentdata");
 
+    root.add_element(forge_xml_element("name", node.title.to_string()));
+    root.add_element(forge_xml_element("title", node.title.to_string()));
     // TODO: URL prefix
     root.add_element(forge_xml_element("url", node.url.to_string()));
+    root.add_element(forge_xml_element("nodeid", node.id.to_string()));
+    root.add_element(XMLElement::new("playable"));
 
     return root;
 }
 
 fn file_to_xml(node: &Node) -> XMLElement {
-    let mut root: XMLElement = stream_to_xml(node);
+    let mut root: XMLElement = XMLElement::new("contentdata");
 
-    root.add_element(forge_xml_element("title", node.title.to_string()));
     if node.album.is_some() {
         root.add_element(forge_xml_element("album", node.album.as_ref().unwrap().to_string()));
     } else {
         root.add_element(forge_xml_element("album", "".to_string()));
     }
+    root.add_element(forge_xml_element("genre", "".to_string()));
+    root.add_element(forge_xml_element("name", node.title.to_string()));
+    root.add_element(forge_xml_element("playlength", "100".to_string()));
+    root.add_element(forge_xml_element("title", node.title.to_string()));
+    // TODO: URL prefix
+    root.add_element(forge_xml_element("url", node.url.to_string()));
     if node.artist.is_some() {
         root.add_element(forge_xml_element("artist", node.artist.as_ref().unwrap().to_string()));
     } else {
         root.add_element(forge_xml_element("artist", "".to_string()));
     }
-    root.add_element(forge_xml_element("genre", "".to_string()));
-    root.add_element(forge_xml_element("playlength", "100".to_string()));
+    root.add_element(forge_xml_element("nodeid", node.id.to_string()));
+    root.add_element(XMLElement::new("playable"));
 
     return root;
 }
