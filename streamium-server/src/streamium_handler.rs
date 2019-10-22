@@ -18,9 +18,9 @@ pub fn get_nodes(conn: StreamiumDbConn, request_data: Data) -> NodeList {
     let nav_data = parse_request_data(data_str);
     println!("{:?}", nav_data);
     return NodeList{
-        nodes: repo::get_nodes(&*conn, nav_data.nodeid, nav_data.fromindexelem, nav_data.numelem),
+        nodes: repo::get_nodes(&*conn, nav_data.nodeid, nav_data.fromindex, nav_data.numelem),
         totnumelem: repo::get_node_count(&*conn, nav_data.nodeid),
-        fromindex: 0,
+        fromindex: nav_data.fromindex,
     };
 }
 
@@ -29,7 +29,7 @@ struct RequestNavData {
     service_id: i32,
     numelem: i64,
     nodeid: Option<i32>,
-    fromindexelem: i64,
+    fromindex: i64,
 }
 
 impl<'r> Responder<'r> for NodeList {
@@ -48,7 +48,7 @@ impl<'r> Responder<'r> for NodeList {
 }
 
 fn parse_request_data(request_data: String) -> RequestNavData {
-    let mut nav_data = RequestNavData {service_id: 0, numelem: 0, nodeid: None, fromindexelem: 0 };
+    let mut nav_data = RequestNavData {service_id: 0, numelem: 0, nodeid: None, fromindex: 0 };
 
     let request_param_str: String = request_data.split("=").skip(2).collect();
     let mut reader = Reader::from_str(request_param_str.as_str());
@@ -85,10 +85,10 @@ fn parse_request_data(request_data: String) -> RequestNavData {
                             _ => panic!("Expected text in serviceid at position {}", reader.buffer_position()),
                         }
                     },
-                    b"fromindexelem" => {
+                    b"fromindex" => {
                         match reader.read_event(&mut buf) {
                             Ok(Event::Text(e)) => {
-                                nav_data.fromindexelem = e.unescape_and_decode(&reader).unwrap().parse().unwrap();
+                                nav_data.fromindex = e.unescape_and_decode(&reader).unwrap().parse().unwrap();
                             },
                             _ => panic!("Expected text in numelement at position {}", reader.buffer_position()),
                         }
