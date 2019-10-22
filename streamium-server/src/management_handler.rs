@@ -29,7 +29,7 @@ pub fn post_add_stream(conn: StreamiumDbConn, new_stream: Form<Stream>) -> Redir
         new_stream.title.as_ref(),
         Some(new_stream.url.as_ref()),
         Some(new_stream.node_id));
-    Redirect::to("/streams/2")
+    Redirect::to("/streams/-8")
 }
 
 #[post("/delete_node/<id>")]

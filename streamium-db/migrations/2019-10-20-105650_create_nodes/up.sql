@@ -17,5 +17,5 @@ CREATE TABLE nodes (
     parent_id INTEGER REFERENCES nodes(id)
 );
 
-INSERT INTO nodes(title, node_type) VALUES ('Artists', 'container');
-INSERT INTO nodes(title, node_type) VALUES ('Streams', 'container');
+INSERT INTO nodes(id, title, node_type) VALUES (-16, 'Artists', 'container');
+INSERT INTO nodes(id, title, node_type) VALUES (-8, 'Streams', 'container');

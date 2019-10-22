@@ -1,10 +1,23 @@
-{% extends "nodes" %}
+{% extends "base" %}
 
-{% block this_node %}
+{% block content %}
   <h3>Library root</h3>
-{% endblock this_node %}
 
-{% block actions %}
+  <div class="row">
+    <table>
+      <tbody>
+          <tr>
+            <td style="width: 24px"><i class="material-icons">folder_open</i></td>
+            <td><a href="/nodes/-16">Artists</a></td>
+          </tr>
+          <tr>
+            <td style="width: 24px"><i class="material-icons">folder_open</i></td>
+            <td><a href="/streams/-8">Streams</a></td>
+          <tr>
+      </tbody>
+    </table>
+  </div>
+
   <div class="row">
     <div class="col s12">
       <a class="btn-floating btn-large waves-effect waves-light red" href="/import">
@@ -12,4 +25,4 @@
       </a>
     </div>
   </div>
-{% endblock actions %}
+{% endblock content %}

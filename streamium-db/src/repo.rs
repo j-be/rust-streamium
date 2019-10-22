@@ -15,8 +15,8 @@ pub fn get_node(conn: &PgConnection, node_id: i32) -> Option<Node> {
     return None;
 }
 
-pub fn get_nodes(conn: &PgConnection, parent: i32, offset: i64, limit: i64) -> Vec<Node> {
-    if parent < 0 {
+pub fn get_nodes(conn: &PgConnection, parent: Option<i32>, offset: i64, limit: i64) -> Vec<Node> {
+    if parent.is_none() {
         return nodes
             .filter(node_type.eq(Nodetypes::Container))
             .order(id.asc())
@@ -35,8 +35,8 @@ pub fn get_nodes(conn: &PgConnection, parent: i32, offset: i64, limit: i64) -> V
         .expect("Error loading nodes")
 }
 
-pub fn get_node_count(conn: &PgConnection,  parent: i32) -> i64 {
-    if parent < 0 {
+pub fn get_node_count(conn: &PgConnection,  parent: Option<i32>) -> i64 {
+    if parent.is_none() {
         return nodes
             .select(count(id))
             .filter(node_type.eq(Nodetypes::Container))

@@ -28,7 +28,7 @@ pub fn get_nodes(conn: StreamiumDbConn, request_data: Data) -> NodeList {
 struct RequestNavData {
     service_id: i32,
     numelem: i64,
-    nodeid: i32,
+    nodeid: Option<i32>,
     fromindexelem: i64,
 }
 
@@ -48,7 +48,7 @@ impl<'r> Responder<'r> for NodeList {
 }
 
 fn parse_request_data(request_data: String) -> RequestNavData {
-    let mut nav_data = RequestNavData {service_id: 0, numelem: 0, nodeid: -1, fromindexelem: 0 };
+    let mut nav_data = RequestNavData {service_id: 0, numelem: 0, nodeid: None, fromindexelem: 0 };
 
     let request_param_str: String = request_data.split("=").skip(2).collect();
     let mut reader = Reader::from_str(request_param_str.as_str());
@@ -80,7 +80,7 @@ fn parse_request_data(request_data: String) -> RequestNavData {
                     b"nodeid" => {
                         match reader.read_event(&mut buf) {
                             Ok(Event::Text(e)) => {
-                                nav_data.nodeid = e.unescape_and_decode(&reader).unwrap().parse().unwrap();
+                                nav_data.nodeid = Some(e.unescape_and_decode(&reader).unwrap().parse().unwrap());
                             },
                             _ => panic!("Expected text in serviceid at position {}", reader.buffer_position()),
                         }

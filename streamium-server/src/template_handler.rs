@@ -42,7 +42,7 @@ pub fn get_children_nodes(conn: StreamiumDbConn, id: i32) -> Option<Template> {
         return None;
     }
 
-    let children = repo::get_nodes(&*conn, node.as_ref().unwrap().id, 0, 1000);
+    let children = repo::get_nodes(&*conn, Some(node.as_ref().unwrap().id), 0, 1000);
 
     Some(Template::render("nodes", NodesContext{node: node.unwrap(), children}))
 }
@@ -55,7 +55,7 @@ pub fn get_children_streams(conn: StreamiumDbConn, id: i32) -> Option<Template> 
         return None;
     }
 
-    let children = repo::get_nodes(&*conn, node.as_ref().unwrap().id, 0, 1000);
+    let children = repo::get_nodes(&*conn, Some(node.as_ref().unwrap().id), 0, 1000);
 
     Some(Template::render("streams", NodesContext { node: node.unwrap(), children }))
 }
