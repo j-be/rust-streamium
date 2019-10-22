@@ -49,11 +49,10 @@ fn create_file_for_path(path: &DirEntry, conn: &PgConnection, mp3_dir: &str) {
 
             let mut url: String = env::var("BASE_URL")
                 .expect("Cannot find BASE_URL in env");
-            url.push_str(path.path().to_str().unwrap().to_string()
-                .split(mp3_dir).collect::<String>().as_ref());
+            url.push_str(get_url(path.path().to_str().unwrap(), mp3_dir).as_str());
 
             repo::create_file(conn,
-                              tag.title().unwrap(), url.as_ref(),
+                              tag.title().unwrap(), url.as_str(),
                               tag.artist(), tag.year(), tag.album(),
                               track_number);
         } else {
@@ -76,4 +75,15 @@ fn visit_dirs(dir: &Path, conn: &PgConnection, cb: &dyn Fn(&DirEntry, &PgConnect
         }
     }
     Ok(())
+}
+
+fn get_url(path: &str, mp3_dir: &str) -> String {
+    let raw_path = path.to_string()
+        .split(mp3_dir)
+        .collect::<String>();
+    raw_path
+        .split("/")
+        .map(|p| urlencoding::encode(p.as_ref()))
+        .collect::<Vec<String>>()
+        .join("/")
 }
