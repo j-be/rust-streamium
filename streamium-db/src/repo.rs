@@ -4,10 +4,22 @@ use crate::models::{Node, Nodetypes, SimpleNode, FileNode};
 use crate::schema::nodes::dsl::*;
 use diesel::expression::dsl::count;
 
+pub fn get_node(conn: &PgConnection, node_id: i32) -> Option<Node> {
+    let node = nodes
+        .filter(id.eq(node_id))
+        .first(conn);
+
+    if node.is_ok() {
+        return Some(node.unwrap());
+    }
+    return None;
+}
+
 pub fn get_nodes(conn: &PgConnection, parent: i32, offset: i64, limit: i64) -> Vec<Node> {
     if parent < 0 {
         return nodes
             .filter(node_type.eq(Nodetypes::Container))
+            .order(id.asc())
             .offset(offset)
             .limit(limit)
             .load::<Node>(conn)
@@ -16,6 +28,7 @@ pub fn get_nodes(conn: &PgConnection, parent: i32, offset: i64, limit: i64) -> V
 
     nodes
         .filter(parent_id.eq(parent))
+        .order(title.asc())
         .offset(offset)
         .limit(limit)
         .load::<Node>(conn)
