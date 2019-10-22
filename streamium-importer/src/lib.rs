@@ -10,9 +10,7 @@ use std::path::Path;
 use diesel::PgConnection;
 use streamium_db::repo;
 
-pub fn import(conn: &PgConnection) {
-    let mp3_dir = "/home/juri/Music/";
-
+pub fn import(conn: &PgConnection, mp3_dir: &str) {
     repo::delete_all_files(conn);
 
     // Create file entries

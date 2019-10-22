@@ -14,5 +14,5 @@ fn main() {
     let connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
 
-    import(&connection);
+    import(&connection, "/home/juri/Music/".as_ref());
 }

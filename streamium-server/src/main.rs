@@ -6,6 +6,7 @@
 extern crate streamium_db;
 extern crate streamium_importer;
 
+use dotenv::dotenv;
 use rocket_contrib::databases::diesel;
 use rocket_contrib::templates::Template;
 use streamium_db::models::Node;
@@ -27,6 +28,8 @@ pub struct NodeList {
 pub struct StreamiumDbConn(diesel::PgConnection);
 
 fn main() {
+    dotenv().ok();
+
     rocket::ignite()
         .mount("/", routes![
             streamium_handler::get_nodes,
