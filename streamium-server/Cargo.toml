@@ -23,4 +23,5 @@ features = [
     "diesel_postgres_pool",
     "json",
     "tera_templates",
+    "serve"
 ]

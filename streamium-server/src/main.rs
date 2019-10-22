@@ -6,8 +6,10 @@
 extern crate streamium_db;
 extern crate streamium_importer;
 
-use dotenv::dotenv;
+use std::env;
+
 use rocket_contrib::databases::diesel;
+use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::Template;
 use streamium_db::models::Node;
 
@@ -43,6 +45,7 @@ fn main() {
             management_handler::post_add_stream,
             management_handler::delete_node,
         ])
+        .mount("/files", StaticFiles::from(env::var("LIB_DIR").expect("Cannot find LIB_DIR in env")))
         .attach(Template::fairing())
         .attach(StreamiumDbConn::fairing())
         .launch();

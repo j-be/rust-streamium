@@ -2,6 +2,7 @@ extern crate dotenv;
 extern crate id3;
 extern crate streamium_db;
 
+use std::env;
 use std::fs;
 use std::fs::DirEntry;
 use std::io;
@@ -14,7 +15,7 @@ pub fn import(conn: &PgConnection, mp3_dir: &str) {
     repo::delete_all_files(conn);
 
     // Create file entries
-    visit_dirs(Path::new(mp3_dir), conn, &create_file_for_path)
+    visit_dirs(Path::new(mp3_dir), conn, &create_file_for_path, mp3_dir)
         .expect("Error on import");
 
     // Attach files to their artist and album
@@ -37,7 +38,7 @@ pub fn import(conn: &PgConnection, mp3_dir: &str) {
     }
 }
 
-fn create_file_for_path(path: &DirEntry, conn: &PgConnection) {
+fn create_file_for_path(path: &DirEntry, conn: &PgConnection, mp3_dir: &str) {
     if id3::Tag::read_from_path(path.path()).is_ok() {
         let tag = id3::Tag::read_from_path(path.path()).unwrap();
         if tag.title().is_some() && tag.artist().is_some() {
@@ -45,8 +46,14 @@ fn create_file_for_path(path: &DirEntry, conn: &PgConnection) {
             if tag.track().is_some() {
                 track_number = Some(tag.track().unwrap() as i32);
             }
+
+            let mut url: String = env::var("BASE_URL")
+                .expect("Cannot find BASE_URL in env");
+            url.push_str(path.path().to_str().unwrap().to_string()
+                .split(mp3_dir).collect::<String>().as_ref());
+
             repo::create_file(conn,
-                              tag.title().unwrap(), "",
+                              tag.title().unwrap(), url.as_ref(),
                               tag.artist(), tag.year(), tag.album(),
                               track_number);
         } else {
@@ -56,15 +63,15 @@ fn create_file_for_path(path: &DirEntry, conn: &PgConnection) {
 }
 
 // one possible implementation of walking a directory only visiting files
-fn visit_dirs(dir: &Path, conn: &PgConnection, cb: &dyn Fn(&DirEntry, &PgConnection)) -> io::Result<()> {
+fn visit_dirs(dir: &Path, conn: &PgConnection, cb: &dyn Fn(&DirEntry, &PgConnection, &str), mp3_dir: &str) -> io::Result<()> {
     if dir.is_dir() {
         for entry in fs::read_dir(dir)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
-                visit_dirs(&path, conn, cb)?;
+                visit_dirs(&path, conn, cb, mp3_dir)?;
             } else {
-                cb(&entry, conn);
+                cb(&entry, conn, mp3_dir);
             }
         }
     }
