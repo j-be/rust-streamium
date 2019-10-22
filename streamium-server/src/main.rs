@@ -7,9 +7,10 @@ extern crate streamium_db;
 extern crate streamium_importer;
 
 use rocket_contrib::databases::diesel;
-
-use streamium_db::models::Node;
 use rocket_contrib::templates::Template;
+use streamium_db::models::Node;
+
+use dotenv::dotenv;
 
 mod streamium_handler;
 mod management_handler;

@@ -3,22 +3,23 @@ extern crate id3;
 extern crate streamium_db;
 
 use std::fs;
+use std::fs::DirEntry;
 use std::io;
+use std::path::Path;
 
 use diesel::PgConnection;
-
 use streamium_db::repo;
-use std::path::Path;
-use std::fs::DirEntry;
 
 pub fn import(conn: &PgConnection) {
     let mp3_dir = "/home/juri/Music/";
 
     repo::delete_all_files(conn);
 
+    // Create file entries
     visit_dirs(Path::new(mp3_dir), conn, &create_file_for_path)
         .expect("Error on import");
 
+    // Attach files to their artist and album
     let artist_root = repo::get_artist_root(conn);
     for artist in repo::get_all_artists(conn) {
         let artist_node = repo::create_artist(conn, artist.as_str(), Some(artist_root.id));
@@ -28,6 +29,7 @@ pub fn import(conn: &PgConnection) {
         }
     }
 
+    // Create "Unknown Album" entries where necessary
     for artist in repo::get_no_album_artists(conn) {
         let artist_node = repo::get_artist(conn, artist.as_str());
         let album_node = repo::create_album(conn, "<Unknown Album>", Some(artist_node.id));

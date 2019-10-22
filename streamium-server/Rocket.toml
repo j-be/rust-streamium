@@ -1,5 +1,6 @@
 [global]
 address = "0.0.0.0"
 port = 42951
+
 [global.databases]
 streamium_db = { url = "postgres://postgres:postgres@localhost/rust-streamium-dev" }
