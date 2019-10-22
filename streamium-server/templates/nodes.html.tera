@@ -1,0 +1,12 @@
+{% extends "base" %}
+
+{% block content %}
+  {% if node.node_type == 'File' %}
+    {% include "file" %}
+  {% elif node.node_type == 'Stream' %}
+    {% include "stream" %}
+  {% else %}
+    {% include "node_with_children" %}
+    {% block actions %}{% endblock actions %}
+  {% endif %}
+{% endblock content %}

@@ -1,0 +1,24 @@
+{% extends "base" %}
+
+{% block content %}
+  <div class="row">
+    <form class="col s12" action="/streams" method="post">
+      <div class="row">
+        <div class="input-field col s12">
+          <i class="material-icons prefix">mode_edit</i>
+          <input placeholder="Title" id="title" name="title" type="text" class="validate">
+          <label for="title">Title</label>
+        </div>
+        <div class="input-field col s12">
+          <i class="material-icons prefix">link</i>
+          <input placeholder="URL" id="url" name="url" type="text" class="validate">
+          <label for="url">URL</label>
+        </div>
+        <input type="hidden" name="node_id" value="{{ node.id }}">
+        <button class="btn" type="submit">Save
+          <i class="material-icons right">send</i>
+        </button>
+      </div>
+    </form>
+  </div>
+{% endblock content %}

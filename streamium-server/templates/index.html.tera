@@ -1,0 +1,15 @@
+{% extends "nodes" %}
+
+{% block this_node %}
+  <h3>Library root</h3>
+{% endblock this_node %}
+
+{% block actions %}
+  <div class="row">
+    <div class="col s12">
+      <a class="btn-floating btn-large waves-effect waves-light red" href="/import">
+        <i class="material-icons">refresh</i>
+      </a>
+    </div>
+  </div>
+{% endblock actions %}

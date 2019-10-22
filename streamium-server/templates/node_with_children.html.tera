@@ -1,0 +1,28 @@
+<h3>{{ node.title }}</h3>
+
+<div class="row">
+  <div class="col s12">
+<table>
+  <tbody>
+    {% for n in children %}
+      <tr>
+        <td style="width: 24px">
+          {% if n.node_type == 'File' %}
+            <i class="material-icons">music_note</i>
+          {% elif n.node_type == 'Album' %}
+            <i class="material-icons">album</i>
+          {% elif n.node_type == 'Artist' %}
+            <i class="material-icons">person_outline</i>
+          {% elif n.node_type == 'Stream' %}
+            <i class="material-icons">speaker</i>
+          {% else %}
+            <i class="material-icons">folder_open</i>
+          {% endif %}
+        </td>
+        <td><a href="{{ n.id }}">{{ n.title }}</a></td>
+      <tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+</div>

@@ -9,9 +9,11 @@ extern crate streamium_importer;
 use rocket_contrib::databases::diesel;
 
 use streamium_db::models::Node;
+use rocket_contrib::templates::Template;
 
 mod streamium_handler;
 mod management_handler;
+mod template_handler;
 
 #[derive(Serialize)]
 pub struct NodeList {
@@ -27,9 +29,16 @@ fn main() {
     rocket::ignite()
         .mount("/", routes![
             streamium_handler::get_nodes,
-            management_handler::import_files,
-            management_handler::all_nodes,
+            template_handler::get_root_nodes,
+            template_handler::get_children_nodes,
+            template_handler::get_children_streams,
+            template_handler::get_add_stream,
          ])
+        .mount("/", routes![
+            management_handler::import_files,
+            management_handler::post_add_stream,
+        ])
+        .attach(Template::fairing())
         .attach(StreamiumDbConn::fairing())
         .launch();
 }
