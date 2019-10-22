@@ -6,6 +6,7 @@ use streamium_importer::import;
 use crate::StreamiumDbConn;
 use rocket::response::Redirect;
 use rocket::request::Form;
+use streamium_db::models::Nodetypes;
 
 
 #[derive(FromForm)]
@@ -31,3 +32,21 @@ pub fn post_add_stream(conn: StreamiumDbConn, new_stream: Form<Stream>) -> Redir
     Redirect::to("/streams/2")
 }
 
+#[post("/delete_node/<id>")]
+pub fn delete_node(conn: StreamiumDbConn, id: i32) -> Redirect {
+    let node = repo::get_node(&*conn, id);
+
+    if node.is_none() {
+        return Redirect::to("/");
+    }
+
+    let mut url: String = "/".to_owned();
+
+    repo::delete_node(&*conn, node.as_ref().unwrap());
+    if node.as_ref().unwrap().node_type == Nodetypes::Stream {
+        url.push_str("streams/");
+    } else {
+        url.push_str("nodes/")
+    }
+    Redirect::to(format!("{}{}", url, node.unwrap().parent_id.unwrap()))
+}

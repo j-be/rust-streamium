@@ -212,3 +212,9 @@ pub fn attach_file_to_node(conn: &PgConnection, file: &Node, parent: &Node) {
         .execute(conn)
         .expect("Error updating file");
 }
+
+pub fn delete_node(conn: &PgConnection, delete_node: &Node) {
+    diesel::delete(delete_node)
+        .execute(conn)
+        .expect("Error deleting node");
+}

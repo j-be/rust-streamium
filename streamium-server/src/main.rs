@@ -41,6 +41,7 @@ fn main() {
         .mount("/", routes![
             management_handler::import_files,
             management_handler::post_add_stream,
+            management_handler::delete_node,
         ])
         .attach(Template::fairing())
         .attach(StreamiumDbConn::fairing())

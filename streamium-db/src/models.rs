@@ -1,6 +1,6 @@
 use super::schema::nodes;
 
-#[derive(DbEnum, Debug, Display, Serialize, Deserialize)]
+#[derive(DbEnum, Debug, Display, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Nodetypes {
     Container,
     Artist,
