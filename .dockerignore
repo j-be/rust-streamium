@@ -1,0 +1,4 @@
+streamium-db/target/
+streamium-importer/target/
+streamium-server/target/
+*/.git/
