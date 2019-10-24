@@ -22,14 +22,22 @@ RUN apt-get install -y \
 ## Rust
 ##
 
-# Copy cargo config
-COPY docker/armhf-rust-buildenv/files/cargo.conf $HOME/.cargo/config
-
 # Install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs >> $HOME/rustup.sh
-RUN sh $HOME/rustup.sh -y \
+RUN RUST_HOME=/opt/cargo CARGO_HOME=/opt/cargo sh $HOME/rustup.sh -y \
     --default-toolchain nightly \
     --target armv7-unknown-linux-gnueabihf
+
+# Copy cargo config
+COPY docker/armhf-rust-buildenv/files/cargo.conf /cargo.conf
+RUN mkdir -p $HOME/.cargo && mv /cargo.conf $HOME/.cargo/config
+
+################################################################################
+## Configure environment
+##
+
+VOLUME /root/.cargo/registry
+ENV PATH="/opt/cargo/bin/:${PATH}"
 
 ################################################################################
 ## Copy sources
@@ -40,10 +48,8 @@ COPY streamium-importer/ /streamium-importer/
 COPY streamium-server/ /streamium-server/
 
 ################################################################################
-## Final stuff
+## Build
 ##
 
 WORKDIR /streamium-server/
-VOLUME /streamium-server/target
-
-ENTRYPOINT $HOME/.cargo/bin/cargo build --target=armv7-unknown-linux-gnueabihf  --release
+ENTRYPOINT cargo build --target=armv7-unknown-linux-gnueabihf  --release

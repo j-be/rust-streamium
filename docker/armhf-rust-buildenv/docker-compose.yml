@@ -9,3 +9,7 @@ services:
       - type: bind
         source: ./target
         target: /streamium-server/target
+      - cargo_registry:/root/.cargo/registry
+
+volumes:
+  cargo_registry:
