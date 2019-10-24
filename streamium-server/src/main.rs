@@ -11,20 +11,12 @@ use std::env;
 use rocket_contrib::databases::diesel;
 use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::Template;
-use streamium_db::models::Node;
 
 use dotenv::dotenv;
 
 mod streamium_handler;
 mod management_handler;
 mod template_handler;
-
-#[derive(Serialize)]
-pub struct NodeList {
-    nodes: Vec<Node>,
-    totnumelem: i64,
-    fromindex: i64,
-}
 
 #[database("streamium_db")]
 pub struct StreamiumDbConn(diesel::PgConnection);

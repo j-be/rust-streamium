@@ -1,4 +1,4 @@
-use crate::{StreamiumDbConn, NodeList};
+use crate::StreamiumDbConn;
 use streamium_db::models::{Node, Nodetypes};
 use streamium_db::repo;
 use rocket::Data;
@@ -22,6 +22,13 @@ pub fn get_nodes(conn: StreamiumDbConn, request_data: Data) -> NodeList {
         totnumelem: repo::get_node_count(&*conn, nav_data.nodeid),
         fromindex: nav_data.fromindex,
     };
+}
+
+#[derive(Serialize)]
+pub struct NodeList {
+    nodes: Vec<Node>,
+    totnumelem: i64,
+    fromindex: i64,
 }
 
 #[derive(Debug)]
