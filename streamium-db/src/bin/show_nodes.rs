@@ -16,14 +16,15 @@ fn main() {
     let connection = PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url));
 
-    repo::create_stream(&connection, "My test Category", "Some URL", Some(1));
-    let results = repo::get_nodes(&connection, 5, 8);
+
+    repo::create_stream(&connection, "My test Category", Some("Some URL"), Some(-8));
+    let results = repo::get_nodes(&connection, Some(-8), 5, 8);
 
     println!("Displaying {} nodes", results.len());
     for node in results {
         println!("ID: {}", node.id);
         println!("Title: {}", node.title);
-        println!("Url: {}", node.url);
+        println!("Url: {:?}", node.url);
         println!("Type: {}", node.node_type);
         println!("----------\n");
     }
