@@ -1,5 +1,6 @@
-#![feature(proc_macro_hygiene, decl_macro)]
+#![feature(proc_macro_hygiene, decl_macro, int_error_matching)]
 
+extern crate ifaces;
 #[macro_use] extern crate rocket;
 #[macro_use] extern crate rocket_contrib;
 #[macro_use] extern crate serde_derive;
@@ -7,6 +8,7 @@ extern crate streamium_db;
 extern crate streamium_importer;
 
 use std::env;
+use std::thread;
 
 use rocket_contrib::databases::diesel;
 use rocket_contrib::serve::StaticFiles;
@@ -17,6 +19,7 @@ use dotenv::dotenv;
 mod streamium_handler;
 mod management_handler;
 mod template_handler;
+mod advertiser;
 
 #[database("streamium_db")]
 pub struct StreamiumDbConn(diesel::PgConnection);
@@ -24,6 +27,15 @@ pub struct StreamiumDbConn(diesel::PgConnection);
 fn main() {
     dotenv().ok();
 
+    thread::spawn(move || {
+        let server_address = env::var("ROCKET_ADDRESS")
+            .expect("Error while getting ROCKET_ADDRESS!");
+        advertiser::listen(server_address.as_str(), 42591);
+    });
+    ignite_rocket();
+}
+
+fn ignite_rocket() {
     rocket::ignite()
         .mount("/", routes![
             streamium_handler::get_nodes,
