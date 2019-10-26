@@ -8,7 +8,7 @@
         </ul>
       </div>
       <div class="card-action">
-        <form action="/delete_node/{{ node.id }}" method="post">
+        <form action="/delete_node/{{ node.id }}?parent_id=-8" method="post">
           <button class="btn" type="submit">Delete
             <i class="material-icons right">delete</i>
           </button>

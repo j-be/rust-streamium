@@ -1,4 +1,4 @@
-use super::schema::nodes;
+use super::schema::{nodes, node_parents};
 
 #[derive(DbEnum, Debug, Display, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Nodetypes {
@@ -19,7 +19,6 @@ pub struct Node {
     pub album: Option<String>,
     pub track_number: Option<i32>,
     pub node_type: Nodetypes,
-    pub parent_id: Option<i32>,
 }
 
 #[derive(Insertable)]
@@ -28,7 +27,6 @@ pub struct SimpleNode<'a> {
     pub title: &'a str,
     pub url: Option<&'a str>,
     pub node_type: Nodetypes,
-    pub parent_id: Option<i32>,
 }
 
 #[derive(Insertable)]
@@ -41,4 +39,20 @@ pub struct FileNode<'a> {
     pub node_type: Nodetypes,
     pub album: Option<&'a str>,
     pub track_number: Option<i32>,
+}
+
+#[derive(Queryable)]
+pub struct NodeParent {
+    pub id: i32,
+    pub node_id: i32,
+    pub parent_id: i32,
+    pub node_order: Option<i32>,
+}
+
+#[derive(Insertable)]
+#[table_name="node_parents"]
+pub struct NewParent {
+    pub node_id: i32,
+    pub parent_id: i32,
+    pub node_order: Option<i32>,
 }

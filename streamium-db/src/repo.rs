@@ -1,12 +1,18 @@
 use diesel::{PgConnection, prelude::*, QueryDsl, QueryResult, RunQueryDsl};
 
-use crate::models::{Node, Nodetypes, SimpleNode, FileNode};
+use crate::models::{Node, Nodetypes, SimpleNode, FileNode, NodeParent, NewParent};
 use crate::schema::nodes::dsl::*;
+use crate::schema::node_parents::dsl::*;
+use crate::schema::{nodes, node_parents};
 use diesel::expression::dsl::count;
 
-pub fn get_node(conn: &PgConnection, node_id: i32) -> Option<Node> {
+pub fn get_order(node: &Node) -> Option<i32>{
+    return node.year.map(|y| y * 100 + node.track_number.unwrap_or(0));
+}
+
+pub fn get_node(conn: &PgConnection, filter_node_id: i32) -> Option<Node> {
     let node = nodes
-        .filter(id.eq(node_id))
+        .filter(nodes::id.eq(filter_node_id))
         .first(conn);
 
     if node.is_ok() {
@@ -19,16 +25,17 @@ pub fn get_nodes(conn: &PgConnection, parent: Option<i32>, offset: i64, limit: i
     if parent.is_none() {
         return nodes
             .filter(node_type.eq(Nodetypes::Container))
-            .order(id.asc())
+            .order(nodes::id.asc())
             .offset(offset)
             .limit(limit)
             .load::<Node>(conn)
             .expect("Error loading nodes");
     }
 
-    nodes
-        .filter(parent_id.eq(parent))
-        .order(title.asc())
+    nodes::table.inner_join(node_parents::table)
+        .select(nodes::all_columns)
+        .filter(parent_id.eq(parent.unwrap()))
+        .order((node_order.asc(), title.asc()))
         .offset(offset)
         .limit(limit)
         .load::<Node>(conn)
@@ -38,36 +45,28 @@ pub fn get_nodes(conn: &PgConnection, parent: Option<i32>, offset: i64, limit: i
 pub fn get_node_count(conn: &PgConnection,  parent: Option<i32>) -> i64 {
     if parent.is_none() {
         return nodes
-            .select(count(id))
+            .select(count(nodes::id))
             .filter(node_type.eq(Nodetypes::Container))
             .first(conn)
             .expect("Error loading nodes");
     }
 
-    nodes
-        .select(count(id))
-        .filter(parent_id.eq(parent))
+    nodes::table.inner_join(node_parents::table)
+        .select(count(nodes::id))
+        .filter(parent_id.eq(parent.unwrap()))
         .first(conn)
         .expect("Error loading nodes")
 }
 
 pub fn get_root_nodes(conn: &PgConnection) -> Vec<Node> {
-    nodes
+    nodes::table.inner_join(node_parents::table)
+        .select(nodes::all_columns)
         .filter(parent_id.is_null())
         .load::<Node>(conn)
         .expect("Error loading nodes")
 }
 
-pub fn get_nodes_by_parent(conn: &PgConnection, parent: i32) -> Vec<Node> {
-    nodes
-        .filter(parent_id.eq(parent))
-        .load::<Node>(conn)
-        .expect("Error loading nodes")
-}
-
 pub fn get_all_artists(conn: &PgConnection) -> Vec<String> {
-    use crate::schema::nodes;
-
     nodes::table.select(artist)
         .filter(node_type.eq(Nodetypes::File)
             .and(artist.is_not_null()))
@@ -95,9 +94,8 @@ pub fn get_artist_root(conn: &PgConnection) -> Node {
 }
 
 pub fn get_no_album_artists(conn: &PgConnection) -> Vec<String> {
-    use crate::schema::nodes;
-
-    nodes::table.select(artist)
+    nodes::table.inner_join(node_parents::table)
+        .select(artist)
         .filter(node_type.eq(Nodetypes::File)
             .and(parent_id.is_null()))
         .distinct()
@@ -109,8 +107,6 @@ pub fn get_no_album_artists(conn: &PgConnection) -> Vec<String> {
 }
 
 pub fn get_albums_for_artist(conn: &PgConnection, filter_artist: &str) -> Vec<String> {
-    use crate::schema::nodes;
-
     nodes::table.select(album)
         .filter(artist.eq(filter_artist)
             .and(node_type.eq(Nodetypes::File))
@@ -132,7 +128,8 @@ pub fn get_artist(conn: &PgConnection, filter_artist: &str) -> Node {
 }
 
 pub fn get_no_album_tracks_for_artist(conn: &PgConnection, filter_artist: &str) -> Vec<Node> {
-    nodes
+    nodes::table.inner_join(node_parents::table)
+        .select(nodes::all_columns)
         .filter(node_type.eq(Nodetypes::File)
             .and(artist.eq(filter_artist))
             .and(parent_id.is_null()))
@@ -140,31 +137,35 @@ pub fn get_no_album_tracks_for_artist(conn: &PgConnection, filter_artist: &str) 
         .expect("Failed to find artist")
 }
 
-pub fn create_album(conn: &PgConnection, new_title: &str, new_parent_id: Option<i32>) -> Node {
-    create_simple_node(conn, new_title, None, Nodetypes::Album, new_parent_id)
+pub fn create_album(conn: &PgConnection, new_title: &str, new_node_order: Option<i32>, new_parent_id: Option<i32>) -> Node {
+    create_simple_node(conn, new_title, None, Nodetypes::Album, new_node_order, new_parent_id)
 }
 
 pub fn create_artist(conn: &PgConnection, new_title: &str, new_parent_id: Option<i32>) -> Node {
-    create_simple_node(conn, new_title, None, Nodetypes::Artist, new_parent_id)
+    create_simple_node(conn, new_title, None, Nodetypes::Artist, None, new_parent_id)
 }
 
 pub fn create_stream(conn: &PgConnection, new_title: &str, new_url: Option<&str>, new_parent_id: Option<i32>) -> Node {
-    create_simple_node(conn, new_title, new_url, Nodetypes::Stream, new_parent_id)
+    create_simple_node(conn, new_title, new_url, Nodetypes::Stream, None,new_parent_id)
 }
 
-fn create_simple_node(conn: &PgConnection, new_title: &str, new_url: Option<&str>, new_node_type: Nodetypes, new_parent_id: Option<i32>) -> Node {
-    use crate::schema::nodes;
-
+fn create_simple_node(conn: &PgConnection, new_title: &str, new_url: Option<&str>, new_node_type: Nodetypes, new_node_order: Option<i32>, new_parent_id: Option<i32>) -> Node {
     let new_simple_node = SimpleNode {
         title: new_title,
         url: new_url,
         node_type: new_node_type,
-        parent_id: new_parent_id,
     };
+
     let result = diesel::insert_into(nodes::table)
         .values(&new_simple_node)
         .get_result(conn) as QueryResult<Node>;
-    result.expect("Error saving new Node")
+    let node = result.expect("Error saving new Node");
+
+    if new_parent_id.is_some() {
+        attach_file_to_node(conn, &node, new_parent_id.unwrap(), new_node_order);
+    }
+
+    return node;
 }
 
 pub fn create_file(
@@ -176,8 +177,6 @@ pub fn create_file(
     new_album: Option<&str>,
     new_track_number: Option<i32>)
 {
-    use crate::schema::nodes;
-
     let new_file_node = FileNode {
         title: new_title,
         url: new_url,
@@ -202,15 +201,20 @@ pub fn update_all_files(conn: &PgConnection, artist_node: &Node, album_node: &No
         .expect("Error loading files for album and artist");
 
     for file in files_to_update {
-        attach_file_to_node(conn, &file, album_node);
+        attach_file_to_node(conn, &file, album_node.id, get_order(&file));
     }
 }
 
-pub fn attach_file_to_node(conn: &PgConnection, file: &Node, parent: &Node) {
-    diesel::update(file)
-        .set(parent_id.eq(parent.id))
-        .execute(conn)
-        .expect("Error updating file");
+pub fn attach_file_to_node(conn: &PgConnection, file: &Node, new_parent_id: i32, new_node_order: Option<i32>) {
+    let new_parent_node = NewParent {
+        node_id: file.id,
+        parent_id: new_parent_id,
+        node_order: new_node_order,
+    };
+    let result = diesel::insert_into(node_parents::table)
+        .values(&new_parent_node)
+        .get_result(conn) as QueryResult<NodeParent>;
+    result.expect("Error saving parent");
 }
 
 pub fn delete_node(conn: &PgConnection, delete_node: &Node) {

@@ -32,8 +32,8 @@ pub fn post_add_stream(conn: StreamiumDbConn, new_stream: Form<Stream>) -> Redir
     Redirect::to("/streams/-8")
 }
 
-#[post("/delete_node/<id>")]
-pub fn delete_node(conn: StreamiumDbConn, id: i32) -> Redirect {
+#[post("/delete_node/<id>?<parent_id>")]
+pub fn delete_node(conn: StreamiumDbConn, id: i32, parent_id: Option<i32>) -> Redirect {
     let node = repo::get_node(&*conn, id);
 
     if node.is_none() {
@@ -43,10 +43,15 @@ pub fn delete_node(conn: StreamiumDbConn, id: i32) -> Redirect {
     let mut url: String = "/".to_owned();
 
     repo::delete_node(&*conn, node.as_ref().unwrap());
+
+    if parent_id.is_none() {
+        return Redirect::to("/");
+    }
+
     if node.as_ref().unwrap().node_type == Nodetypes::Stream {
         url.push_str("streams/");
     } else {
         url.push_str("nodes/")
     }
-    Redirect::to(format!("{}{}", url, node.unwrap().parent_id.unwrap()))
+    return Redirect::to(format!("{}{}", url, parent_id.unwrap()));
 }

@@ -9,6 +9,7 @@ use std::path::Path;
 
 use diesel::PgConnection;
 use streamium_db::repo;
+use streamium_db::repo::get_order;
 
 pub fn import(conn: &PgConnection, mp3_dir: &str) {
     repo::delete_all_files(conn);
@@ -22,7 +23,7 @@ pub fn import(conn: &PgConnection, mp3_dir: &str) {
     for artist in repo::get_all_artists(conn) {
         let artist_node = repo::create_artist(conn, artist.as_str(), Some(artist_root.id));
         for album in repo::get_albums_for_artist(conn, artist.as_str()) {
-            let album_node = repo::create_album(conn, album.as_str(), Some(artist_node.id));
+            let album_node = repo::create_album(conn, album.as_str(), None, Some(artist_node.id));
             repo::update_all_files(conn, &artist_node, &album_node);
         }
     }
@@ -30,9 +31,9 @@ pub fn import(conn: &PgConnection, mp3_dir: &str) {
     // Create "Unknown Album" entries where necessary
     for artist in repo::get_no_album_artists(conn) {
         let artist_node = repo::get_artist(conn, artist.as_str());
-        let album_node = repo::create_album(conn, "<Unknown Album>", Some(artist_node.id));
+        let album_node = repo::create_album(conn, "<Unknown Album>", Some(9999), Some(artist_node.id));
         for file in repo::get_no_album_tracks_for_artist(conn, artist.as_str()) {
-            repo::attach_file_to_node(conn, &file, &album_node);
+            repo::attach_file_to_node(conn, &file, album_node.id, get_order(&file));
         }
     }
 }

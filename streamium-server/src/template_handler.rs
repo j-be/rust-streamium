@@ -4,7 +4,7 @@ use streamium_db::repo;
 use crate::StreamiumDbConn;
 use streamium_db::models::{Node, Nodetypes};
 
-const ROOT_NODE: Node = Node{
+const ROOT_NODE: Node = Node {
     id: -1,
     title: String::new(),
     url: None,
@@ -13,7 +13,6 @@ const ROOT_NODE: Node = Node{
     album: None,
     track_number: None,
     node_type: Nodetypes::Container,
-    parent_id: None
 };
 
 #[derive(Serialize)]
