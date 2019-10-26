@@ -5,6 +5,7 @@ use crate::schema::nodes::dsl::*;
 use crate::schema::node_parents::dsl::*;
 use crate::schema::{nodes, node_parents};
 use diesel::expression::dsl::count;
+use diesel::dsl::{select, exists};
 
 pub fn get_order(node: &Node) -> Option<i32>{
     return node.year.map(|y| y * 100 + node.track_number.unwrap_or(0));
@@ -64,6 +65,14 @@ pub fn get_root_nodes(conn: &PgConnection) -> Vec<Node> {
         .filter(parent_id.is_null())
         .load::<Node>(conn)
         .expect("Error loading nodes")
+}
+
+pub fn is_node_favorite(conn: &PgConnection, filter_node_id: i32) -> bool {
+    select(exists(node_parents.filter(
+        parent_id.eq(-24)
+            .and(node_id.eq(filter_node_id)))))
+        .get_result(conn)
+        .expect("Cannot determine if node is favorite!")
 }
 
 pub fn get_all_artists(conn: &PgConnection) -> Vec<String> {
@@ -162,7 +171,7 @@ fn create_simple_node(conn: &PgConnection, new_title: &str, new_url: Option<&str
     let node = result.expect("Error saving new Node");
 
     if new_parent_id.is_some() {
-        attach_file_to_node(conn, &node, new_parent_id.unwrap(), new_node_order);
+        attach_node_to_parent(conn, node.id, new_parent_id.unwrap(), new_node_order);
     }
 
     return node;
@@ -201,13 +210,13 @@ pub fn update_all_files(conn: &PgConnection, artist_node: &Node, album_node: &No
         .expect("Error loading files for album and artist");
 
     for file in files_to_update {
-        attach_file_to_node(conn, &file, album_node.id, get_order(&file));
+        attach_node_to_parent(conn, file.id, album_node.id, get_order(&file));
     }
 }
 
-pub fn attach_file_to_node(conn: &PgConnection, file: &Node, new_parent_id: i32, new_node_order: Option<i32>) {
+pub fn attach_node_to_parent(conn: &PgConnection, filter_node_id: i32, new_parent_id: i32, new_node_order: Option<i32>) {
     let new_parent_node = NewParent {
-        node_id: file.id,
+        node_id: filter_node_id,
         parent_id: new_parent_id,
         node_order: new_node_order,
     };
@@ -215,6 +224,14 @@ pub fn attach_file_to_node(conn: &PgConnection, file: &Node, new_parent_id: i32,
         .values(&new_parent_node)
         .get_result(conn) as QueryResult<NodeParent>;
     result.expect("Error saving parent");
+}
+
+pub fn detach_node_from_parent(conn: &PgConnection, filter_node_id: i32, filter_parent_id: i32) {
+    diesel::delete(node_parents.filter(
+        node_id.eq(filter_node_id)
+            .and(parent_id.eq(filter_parent_id))
+    )).execute(conn)
+        .expect("Error while detaching node from parent!");
 }
 
 pub fn delete_node(conn: &PgConnection, delete_node: &Node) {

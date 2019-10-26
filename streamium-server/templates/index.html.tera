@@ -8,6 +8,10 @@
       <tbody>
           <tr>
             <td style="width: 24px"><i class="material-icons">folder_open</i></td>
+            <td><a href="/nodes/-24">Favorites</a></td>
+          <tr>
+          <tr>
+            <td style="width: 24px"><i class="material-icons">folder_open</i></td>
             <td><a href="/nodes/-16">Artists</a></td>
           </tr>
           <tr>

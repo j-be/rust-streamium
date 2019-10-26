@@ -55,3 +55,24 @@ pub fn delete_node(conn: StreamiumDbConn, id: i32, parent_id: Option<i32>) -> Re
     }
     return Redirect::to(format!("{}{}", url, parent_id.unwrap()));
 }
+
+#[post("/add_favorite/<id>?<node_order>")]
+pub fn add_to_favorites(conn: StreamiumDbConn, id: i32, node_order: Option<i32>) -> Option<Redirect> {
+    let node = repo::get_node(&*conn, id);
+
+    node.map_or(None, |node| {
+        repo::attach_node_to_parent(&*conn, node.id, -24, node_order);
+        Some(Redirect::to(format!("/nodes/{}", id)))
+    })
+}
+
+#[post("/delete_favorite/<id>")]
+pub fn remove_from_favorites(conn: StreamiumDbConn, id: i32) -> Option<Redirect> {
+    let node = repo::get_node(&*conn, id);
+
+    node.map_or(None, |node| {
+        repo::detach_node_from_parent(&*conn, node.id, -24);
+        Some(Redirect::to(format!("/nodes/{}", id)))
+    })
+}
+

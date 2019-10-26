@@ -48,6 +48,8 @@ fn ignite_rocket() {
             management_handler::import_files,
             management_handler::post_add_stream,
             management_handler::delete_node,
+            management_handler::add_to_favorites,
+            management_handler::remove_from_favorites,
         ])
         .mount("/files", StaticFiles::from(env::var("LIB_DIR").expect("Cannot find LIB_DIR in env")))
         .attach(Template::fairing())

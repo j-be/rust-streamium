@@ -1,4 +1,19 @@
-<h3>{{ node.title }}</h3>
+<h3>
+  <span>{{ node.title }}</span>
+  {% if node.id > 0 %}
+    {% if not is_node_favorite %}
+      <form action="/add_favorite/{{ node.id }}" style="float: right" method="post">
+        <button class="btn waves-effect waves-light" type="submit">
+          <i class="material-icons left">favorite_border</i>Add to Favorites
+    {% else %}
+      <form action="/delete_favorite/{{ node.id }}" style="float: right" method="post">
+        <button class="btn waves-effect waves-light" type="submit">
+          <i class="material-icons left">favorite</i>Remove from Favorites
+    {% endif %}
+      </button>
+    </form>
+  {% endif %}
+</h3>
 
 <div class="row">
   <div class="col s12">
@@ -19,7 +34,7 @@
             <i class="material-icons">folder_open</i>
           {% endif %}
         </td>
-        <td><a href="{{ n.id }}">{{ n.title }}</a></td>
+        <td><a href="{{ n.id }}"><div>{{ n.title }}</div></a></td>
       <tr>
     {% endfor %}
   </tbody>

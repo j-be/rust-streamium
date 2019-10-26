@@ -33,7 +33,7 @@ pub fn import(conn: &PgConnection, mp3_dir: &str) {
         let artist_node = repo::get_artist(conn, artist.as_str());
         let album_node = repo::create_album(conn, "<Unknown Album>", Some(9999), Some(artist_node.id));
         for file in repo::get_no_album_tracks_for_artist(conn, artist.as_str()) {
-            repo::attach_file_to_node(conn, &file, album_node.id, get_order(&file));
+            repo::attach_node_to_parent(conn, file.id, album_node.id, get_order(&file));
         }
     }
 }
