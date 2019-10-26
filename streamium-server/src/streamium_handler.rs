@@ -1,14 +1,17 @@
-use crate::StreamiumDbConn;
+use std::env;
+use std::io::{Cursor, Read};
+
+use quick_xml::events::Event;
+use quick_xml::Reader;
+use rocket::{Request, Response};
+use rocket::Data;
+use rocket::http::{ContentType, Status};
+use rocket::response::Responder;
+use simple_xml_serialize::XMLElement;
 use streamium_db::models::{Node, Nodetypes};
 use streamium_db::repo;
-use rocket::Data;
-use rocket::response::Responder;
-use rocket::{Response, Request};
-use rocket::http::{ContentType, Status};
-use std::io::{Cursor, Read};
-use quick_xml::events::Event;
-use simple_xml_serialize::XMLElement;
-use quick_xml::Reader;
+
+use crate::StreamiumDbConn;
 
 #[post("/", data = "<request_data>")]
 pub fn get_nodes(conn: StreamiumDbConn, request_data: Data) -> NodeList {
@@ -124,6 +127,17 @@ fn forge_optional_xml_element(name: &str, content: Option<&String>) -> XMLElemen
     return XMLElement::new(name);
 }
 
+fn forge_url_element(name: &str, content: Option<&String>, node_type: &Nodetypes) -> XMLElement {
+    if content.is_none() {
+        return XMLElement::new(name);
+    }
+
+    match node_type {
+        Nodetypes::File => forge_xml_element(name, format!("{}/{}", env::var("BASE_URL").unwrap(), content.unwrap())),
+        _ => forge_optional_xml_element(name, content)
+    }
+}
+
 fn nodes_to_xml(nodes: &Vec<Node>) -> XMLElement {
     let mut root = XMLElement::new("contentdataset");
     for node in nodes {
@@ -155,7 +169,7 @@ fn stream_to_xml(node: &Node) -> XMLElement {
     root.add_element(forge_xml_element("name", node.title.to_string()));
     root.add_element(forge_xml_element("title", node.title.to_string()));
     // TODO: URL prefix
-    root.add_element(forge_optional_xml_element("url", node.url.as_ref()));
+    root.add_element(forge_url_element("url", node.url.as_ref(), &node.node_type));
     root.add_element(forge_xml_element("nodeid", node.id.to_string()));
     root.add_element(XMLElement::new("playable"));
 
@@ -171,7 +185,7 @@ fn file_to_xml(node: &Node) -> XMLElement {
     root.add_element(forge_xml_element("playlength", "100".to_string()));
     root.add_element(forge_xml_element("title", node.title.to_string()));
     // TODO: URL prefix
-    root.add_element(forge_optional_xml_element("url", node.url.as_ref()));
+    root.add_element(forge_url_element("url", node.url.as_ref(), &node.node_type));
     root.add_element(forge_optional_xml_element("artist", node.artist.as_ref()));
     root.add_element(forge_xml_element("nodeid", node.id.to_string()));
     root.add_element(XMLElement::new("playable"));

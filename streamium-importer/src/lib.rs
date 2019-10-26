@@ -2,7 +2,6 @@ extern crate dotenv;
 extern crate id3;
 extern crate streamium_db;
 
-use std::env;
 use std::fs;
 use std::fs::DirEntry;
 use std::io;
@@ -47,12 +46,8 @@ fn create_file_for_path(path: &DirEntry, conn: &PgConnection, mp3_dir: &str) {
                 track_number = Some(tag.track().unwrap() as i32);
             }
 
-            let mut url: String = env::var("BASE_URL")
-                .expect("Cannot find BASE_URL in env");
-            url.push_str(get_url(path.path().to_str().unwrap(), mp3_dir).as_str());
-
             repo::create_file(conn,
-                              tag.title().unwrap(), url.as_str(),
+                              tag.title().unwrap(), get_url(path.path().to_str().unwrap(), mp3_dir).as_str(),
                               tag.artist(), tag.year(), tag.album(),
                               track_number);
         } else {
