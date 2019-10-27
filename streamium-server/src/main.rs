@@ -30,7 +30,11 @@ fn main() {
     thread::spawn(move || {
         let server_address = env::var("ROCKET_ADDRESS")
             .expect("Error while getting ROCKET_ADDRESS!");
-        advertiser::listen(server_address.as_str(), 42591);
+        let server_port = env::var("ROCKET_PORT")
+            .expect("Error while getting ROCKET_PORT!")
+            .parse::<u16>()
+            .expect("Error while parsing ROCKET_PORT!");
+        advertiser::listen(server_address.as_str(), server_port);
     });
     ignite_rocket();
 }
