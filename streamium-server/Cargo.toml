@@ -10,12 +10,12 @@ edition = "2018"
 rocket = "0.4.2"
 streamium-db = { path = "../streamium-db" }
 streamium-importer = { path = "../streamium-importer" }
-simple_xml_serialize = "0.2.1"
+simple_xml_serialize = "0.2.3"
 quick-xml = "0.17.0"
 serde = "1.0.101"
 serde_derive = "1.0.101"
 dotenv = "0.15.0"
-endian_trait = "0.3.0"
+endian_trait = "0.6.0"
 ifaces = { git = "https://github.com/LuoZijun/rust-ifaces.git" }
 
 [dependencies.rocket_contrib]
