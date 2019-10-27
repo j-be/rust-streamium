@@ -16,6 +16,14 @@
 --
 -- SELECT diesel_manage_updated_at('users');
 -- ```
+CREATE TABLE IF NOT EXISTS __diesel_schema_migrations
+(
+    version VARCHAR(50) NOT NULL
+        CONSTRAINT __diesel_schema_migrations_pkey
+            PRIMARY KEY,
+    run_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP not null
+);
+
 CREATE OR REPLACE FUNCTION diesel_manage_updated_at(_tbl regclass) RETURNS VOID AS $$
 BEGIN
     EXECUTE format('CREATE TRIGGER set_updated_at BEFORE UPDATE ON %s

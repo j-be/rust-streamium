@@ -13,6 +13,7 @@ use std::thread;
 use rocket_contrib::databases::diesel;
 use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::Template;
+use streamium_db::migration;
 
 use dotenv::dotenv;
 
@@ -26,6 +27,8 @@ pub struct StreamiumDbConn(diesel::PgConnection);
 
 fn main() {
     dotenv().ok();
+
+    migration::migrate();
 
     thread::spawn(move || {
         let server_address = env::var("ROCKET_ADDRESS")
