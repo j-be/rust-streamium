@@ -1,0 +1,190 @@
+name: Build and release
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  build-armhf:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt install crossbuild-essential-armhf
+
+      - name: Copy apt-list for armhf libraries
+        run: |
+          sudo cp docker/armhf-rust-buildenv/files/armhf.list /etc/apt/sources.list.d/
+
+      - name: Enable armhf in dpkg
+        run: |
+          sudo dpkg --add-architecture armhf
+
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly-2020-01-08
+            target: armv7-unknown-linux-gnueabihf
+            override: true
+
+      - name: Install additional libraries
+        run: |
+          sudo apt-get update || true
+          sudo apt-get install libsasl2-modules-gssapi-mit:armhf libpq-dev:armhf
+
+      - name: Create cached directory
+        run: |
+          mkdir -p ~/.cargo/registry
+
+      - name: Cache cargo registry
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-armhf-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Create folder for cargo config
+        run: |
+          mkdir -p streamium-server/.cargo
+
+      - name: Install cargo config
+        run: |
+          cp docker/armhf-rust-buildenv/files/cargo.conf streamium-server/.cargo/config
+
+      - name: Build
+        run: |
+          cd streamium-server
+          cargo build --target=armv7-unknown-linux-gnueabihf --release || sudo apt-get install libpq-dev:amd64 && cargo build --target=armv7-unknown-linux-gnueabihf --release || sudo apt-get install libpq-dev:armhf && cargo build --target=armv7-unknown-linux-gnueabihf --release
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v1
+        with:
+          path: streamium-server/target/armv7-unknown-linux-gnueabihf/release/streamium-server
+          name: streamium-server_armhf
+
+  build-amd64:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt install build-essential
+
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly-2020-01-08
+            override: true
+
+      - name: Install additional libraries
+        run: |
+          sudo apt-get update || true
+          sudo apt-get install libsasl2-modules-gssapi-mit libpq-dev
+
+      - name: Create cached directory
+        run: |
+          mkdir -p ~/.cargo/registry
+
+      - name: Cache cargo registry
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-amd64-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: |
+          cd streamium-server && cargo build --release
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v1
+        with:
+          path: streamium-server/target/release/streamium-server
+          name: streamium-server_amd64
+
+  deploy-templates:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Zip templates
+        run: |
+          cd streamium-server && zip templates templates/*
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v1
+        with:
+          path: streamium-server/templates.zip
+          name: templates.zip
+
+  release:
+    runs-on: ubuntu-latest
+
+    needs: [build-armhf, build-amd64, deploy-templates]
+
+    steps:
+    - name: Download armhf binary
+      uses: actions/download-artifact@v1
+      with:
+        name: streamium-server_armhf
+        path: ./streamium-server_armhf
+
+    - name: Download amd64 binary
+      uses: actions/download-artifact@v1
+      with:
+        name: streamium-server_amd64
+        path: ./streamium-server_amd64
+
+    - name: Download templates
+      uses: actions/download-artifact@v1
+      with:
+        name: templates.zip
+        path: ./
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Attach armhf binary to release
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: streamium-server_armhf/streamium-server
+        asset_name: streamium-server_armhf
+        asset_content_type: application/octet-stream
+
+    - name: Attach amd64 binary to release
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: streamium-server_amd64/streamium-server
+        asset_name: streamium-server_amd64
+        asset_content_type: application/octet-stream
+
+    - name: Attach templates.zip to release
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: templates.zip
+        asset_name: templates.zip
+        asset_content_type: application/zip
