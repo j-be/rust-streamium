@@ -52,6 +52,5 @@ COPY streamium-server/ /streamium-server/
 ## Build
 ##
 
-RUN apt-get install -y libpq-dev:amd64
 WORKDIR /streamium-server/
-ENTRYPOINT cargo build --target=armv7-unknown-linux-gnueabihf --release || apt-get install -y libpq-dev:armhf && cargo build --target=armv7-unknown-linux-gnueabihf --release
+ENTRYPOINT cargo build --target=armv7-unknown-linux-gnueabihf --release || apt-get install -y libpq-dev:amd64 && cargo build --target=armv7-unknown-linux-gnueabihf --release || apt-get install -y libpq-dev:armhf && cargo build --target=armv7-unknown-linux-gnueabihf --release
