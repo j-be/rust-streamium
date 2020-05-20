@@ -1,6 +1,6 @@
 [package]
 name = "streamium-importer"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Juri Berlanda <juriberlanda@hotmail.com>"]
 edition = "2018"
 
@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 streamium-db = { path = "../streamium-db" }
-id3 = "0.3.0"
+id3 = "0.5.1"
 dotenv = "0.15.0"
-diesel = { version = "1.4.3", features = ["postgres"] }
+diesel = { version = "1.4.4", features = ["postgres"] }
 urlencoding = "1.0.0"

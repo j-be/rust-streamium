@@ -1,17 +1,17 @@
 [package]
 name = "streamium-db"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Juri Berlanda <juriberlanda@hotmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-diesel = { version = "1.4.3", features = ["postgres"] }
+diesel = { version = "1.4.4", features = ["postgres"] }
 dotenv = "0.15.0"
-diesel-derive-enum = { version = "0.4.4", features = ["postgres"] }
+diesel-derive-enum = { version = "1.0.0", features = ["postgres"] }
 diesel_migrations = "1.4.0"
-strum = "0.16.0"
-strum_macros = "0.16.0"
-serde = "1.0.101"
-serde_derive = "1.0.101"
+strum = "0.18.0"
+strum_macros = "0.18.0"
+serde = "1.0.110"
+serde_derive = "1.0.110"
