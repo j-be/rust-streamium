@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-armhf:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
       - uses: actions/checkout@master
@@ -35,7 +35,7 @@ jobs:
       - name: Install additional libraries
         run: |
           sudo apt-get update || true
-          sudo apt-get install libsasl2-modules-gssapi-mit:armhf libpq-dev:armhf
+          sudo apt-get install libsasl2-modules-gssapi-mit:armhf libpq5:armhf libpq5:amd64 libpq-dev:amd64
 
       - name: Create cached directory
         run: |
@@ -58,7 +58,11 @@ jobs:
       - name: Build
         run: |
           cd streamium-server
-          cargo build --target=armv7-unknown-linux-gnueabihf --release || sudo apt-get install libpq-dev:amd64 && cargo build --target=armv7-unknown-linux-gnueabihf --release || sudo apt-get install libpq-dev:armhf && cargo build --target=armv7-unknown-linux-gnueabihf --release
+          cargo build --target=armv7-unknown-linux-gnueabihf --release
+          sudo apt-get purge libpq-dev:amd64
+          sudo apt-get autoremove
+          sudo apt-get install libpq-dev:armhf
+          cargo build --target=armv7-unknown-linux-gnueabihf --release
 
       - name: Upload binary
         uses: actions/upload-artifact@v1
