@@ -17,7 +17,8 @@ RUN apt-get update || echo ""
 RUN apt-get install -y \
     curl \
     libsasl2-modules-gssapi-mit:armhf \
-    libpq-dev:armhf
+    libpq5:armhf \
+    libpq5:amd64
 
 ################################################################################
 ## Rust
@@ -49,8 +50,14 @@ COPY streamium-importer/ /streamium-importer/
 COPY streamium-server/ /streamium-server/
 
 ################################################################################
+## Copy buildscript
+##
+COPY docker/armhf-rust-buildenv/files/build_with.sh /usr/local/sbin/build_with
+RUN chmod +x /usr/local/sbin/build_with
+
+################################################################################
 ## Build
 ##
 
 WORKDIR /streamium-server/
-ENTRYPOINT cargo build --target=armv7-unknown-linux-gnueabihf --release || apt-get install -y libpq-dev:amd64 && cargo build --target=armv7-unknown-linux-gnueabihf --release || apt-get install -y libpq-dev:armhf && cargo build --target=armv7-unknown-linux-gnueabihf --release
+ENTRYPOINT rm -rf target/* && build_with armhf || build_with amd64 || build_with armhf
