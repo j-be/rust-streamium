@@ -28,7 +28,7 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly-2020-01-08
+            toolchain: nightly
             target: armv7-unknown-linux-gnueabihf
             override: true
 
@@ -80,7 +80,7 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly-2020-01-08
+            toolchain: nightly
             override: true
 
       - name: Install additional libraries
