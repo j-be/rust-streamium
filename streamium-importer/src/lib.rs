@@ -75,12 +75,14 @@ fn visit_dirs(dir: &Path, conn: &PgConnection, cb: &dyn Fn(&DirEntry, &PgConnect
 }
 
 fn get_url(path: &str, mp3_dir: &str) -> String {
-    let raw_path = path.to_string()
-        .split(mp3_dir)
-        .collect::<String>();
-    raw_path
+    path.strip_prefix(mp3_dir).unwrap()
         .split("/")
-        .map(|p| urlencoding::encode(p.as_ref()))
+        .map(|p| urlencoding::encode(p.as_ref()).to_string())
         .collect::<Vec<String>>()
         .join("/")
+}
+
+#[test]
+fn test_get_url() {
+    assert_eq!(get_url("/path/to/mp3s/some/folder/escape?&", "/path/to/mp3s"), "/some/folder/escape%3F%26");
 }
