@@ -7,6 +7,7 @@ use std::fs::DirEntry;
 use std::io;
 use std::path::Path;
 
+use id3::TagLike;
 use diesel::PgConnection;
 use streamium_db::repo;
 use streamium_db::repo::get_order;

@@ -7,19 +7,19 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = "0.4.4"
+rocket = "0.4.11"
 streamium-db = { path = "../streamium-db" }
 streamium-importer = { path = "../streamium-importer" }
-simple_xml_serialize = "0.2.3"
-quick-xml = "0.18.1"
-serde = "1.0.110"
-serde_derive = "1.0.110"
+simple_xml_serialize = "0.3.0"
+quick-xml = "0.23.0"
+serde = "1.0.137"
+serde_derive = "1.0.137"
 dotenv = "0.15.0"
 endian_trait = "0.6.0"
 ifaces = { git = "https://github.com/LuoZijun/rust-ifaces.git" }
 
 [dependencies.rocket_contrib]
-version = "0.4.4"
+version = "0.4.11"
 default-features = false
 features = [
     "diesel_postgres_pool",
