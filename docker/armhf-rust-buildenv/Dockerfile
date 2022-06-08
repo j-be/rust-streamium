@@ -1,63 +1,20 @@
-FROM ubuntu:18.04
+# syntax=docker/dockerfile:1
 
-################################################################################
-## Toolchain and libs
-##
+# Using multistage build:
+# 	https://docs.docker.com/develop/develop-images/multistage-build/
+# 	https://whitfin.io/speeding-up-rust-docker-builds/
 
-# Install toolchain
-RUN apt-get update
-RUN apt-get install -y crossbuild-essential-armhf
+########################## BUILD IMAGE  ##########################
+FROM ghcr.io/j-be/rust-diesel-postgres:armv7 as build
 
-# Enable armhf packages
-COPY docker/armhf-rust-buildenv/files/armhf.list $HOME/etc/apt/sources.list.d/
-RUN dpkg --add-architecture armhf
+# Copies the complete project
+# To avoid copying unneeded files, use .dockerignore
+COPY . .
+COPY ./rust-toolchain ./rust-toolchain
 
-# Install additional libraries
-RUN apt-get update || echo ""
-RUN apt-get install -y \
-    curl \
-    libsasl2-modules-gssapi-mit:armhf \
-    libpq5:armhf \
-    libpq5:amd64
+RUN rustup target add armv7-unknown-linux-gnueabihf
 
-################################################################################
-## Rust
-##
 
-# Install rust
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs >> $HOME/rustup.sh
-RUN RUST_HOME=/opt/cargo CARGO_HOME=/opt/cargo sh $HOME/rustup.sh -y \
-    --default-toolchain nightly \
-    --target armv7-unknown-linux-gnueabihf
-
-# Copy cargo config
-COPY docker/armhf-rust-buildenv/files/cargo.conf /cargo.conf
-RUN mkdir -p $HOME/.cargo && mv /cargo.conf $HOME/.cargo/config
-
-################################################################################
-## Configure environment
-##
-
-VOLUME /root/.cargo/registry
-ENV PATH="/opt/cargo/bin/:${PATH}"
-
-################################################################################
-## Copy sources
-##
-
-COPY streamium-db/ /streamium-db/
-COPY streamium-importer/ /streamium-importer/
-COPY streamium-server/ /streamium-server/
-
-################################################################################
-## Copy buildscript
-##
-COPY docker/armhf-rust-buildenv/files/build_with.sh /usr/local/sbin/build_with
-RUN chmod +x /usr/local/sbin/build_with
-
-################################################################################
-## Build
-##
-
-WORKDIR /streamium-server/
-ENTRYPOINT rm -rf target/* && build_with armhf || build_with amd64 || build_with armhf
+# Builds again, this time it'll just be
+# your actual source files being built
+RUN cd streamium-server && cargo build --release --target=armv7-unknown-linux-gnueabihf

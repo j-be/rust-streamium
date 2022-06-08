@@ -2,76 +2,44 @@ name: Build and release
 
 on:
   push:
+    branches:
+      - "ci"
     tags:
-    - 'v*'
+      - "*"
 
 jobs:
   build-armhf:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@master
+      - name: Install dependencies
+        run: sudo apt-get install apt-transport-https ca-certificates curl gnupg lsb-release
 
-      - name: Install toolchain
+      - name: Install Docker
         run: |
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt-get update
-          sudo apt install crossbuild-essential-armhf
+          sudo apt-get install docker-ce docker-ce-cli containerd.io
 
-      - name: Copy apt-list for armhf libraries
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Build rust-streamium server
         run: |
-          sudo cp docker/armhf-rust-buildenv/files/armhf.list /etc/apt/sources.list.d/
-
-      - name: Enable armhf in dpkg
-        run: |
-          sudo dpkg --add-architecture armhf
-
-      - name: Install latest nightly
-        uses: actions-rs/toolchain@v1
-        with:
-            toolchain: nightly
-            target: armv7-unknown-linux-gnueabihf
-            override: true
-
-      - name: Install additional libraries
-        run: |
-          sudo apt-get update || true
-          sudo apt-get install libsasl2-modules-gssapi-mit:armhf libpq5:armhf libpq5:amd64 libpq-dev:amd64
-
-      - name: Create cached directory
-        run: |
-          mkdir -p ~/.cargo/registry
-
-      - name: Cache cargo registry
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-armhf-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Create folder for cargo config
-        run: |
-          mkdir -p streamium-server/.cargo
-
-      - name: Install cargo config
-        run: |
-          cp docker/armhf-rust-buildenv/files/cargo.conf streamium-server/.cargo/config
-
-      - name: Build
-        run: |
-          cd streamium-server
-          cargo build --target=armv7-unknown-linux-gnueabihf --release
-          sudo apt-get purge libpq-dev:amd64
-          sudo apt-get autoremove
-          sudo apt-get install libpq-dev:armhf
-          cargo build --target=armv7-unknown-linux-gnueabihf --release
+          docker build -t rust-streamium-build -f docker/armhf-rust-buildenv/Dockerfile .
+          docker create --name rust-streamium rust-streamium-build
+          docker cp rust-streamium:/app/streamium-server/target/armv7-unknown-linux-gnueabihf/release/streamium-server ./streamium-server_armhf
+          docker rm rust-streamium
 
       - name: Upload binary
         uses: actions/upload-artifact@v1
         with:
-          path: streamium-server/target/armv7-unknown-linux-gnueabihf/release/streamium-server
+          path: ./streamium-server_armhf
           name: streamium-server_armhf
 
   build-amd64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@master
@@ -84,7 +52,6 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
             override: true
 
       - name: Install additional libraries
@@ -113,7 +80,7 @@ jobs:
           name: streamium-server_amd64
 
   deploy-templates:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@master
@@ -129,8 +96,9 @@ jobs:
           name: templates.zip
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
+    if: ${{ startsWith(github.ref, 'refs/tags') }}
     needs: [build-armhf, build-amd64, deploy-templates]
 
     steps:
