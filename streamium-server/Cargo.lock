@@ -1451,7 +1451,7 @@ checksum = "3015a7d0a5fd5105c91c3710d42f9ccf0abfb287d62206484dcc67f9569a6483"
 
 [[package]]
 name = "streamium-db"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "diesel",
  "diesel-derive-enum",
@@ -1465,7 +1465,7 @@ dependencies = [
 
 [[package]]
 name = "streamium-importer"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "diesel",
  "dotenv",
@@ -1476,7 +1476,7 @@ dependencies = [
 
 [[package]]
 name = "streamium-server"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "dotenv",
  "endian_trait",

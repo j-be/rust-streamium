@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "streamium-db"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "diesel",
  "diesel-derive-enum",
@@ -209,7 +209,7 @@ dependencies = [
 
 [[package]]
 name = "streamium-importer"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "diesel",
  "dotenv",
