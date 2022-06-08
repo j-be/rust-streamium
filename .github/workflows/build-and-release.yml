@@ -29,13 +29,13 @@ jobs:
         run: |
           docker build -t rust-streamium-build -f docker/armhf-rust-buildenv/Dockerfile .
           docker create --name rust-streamium rust-streamium-build
-          docker cp rust-streamium:/app/streamium-server/target/armv7-unknown-linux-gnueabihf/release/streamium-server ./streamium-server_armhf
+          docker cp rust-streamium:/app/streamium-server/target/armv7-unknown-linux-gnueabihf/release/streamium-server ./streamium-server
           docker rm rust-streamium
 
       - name: Upload binary
         uses: actions/upload-artifact@v1
         with:
-          path: ./streamium-server_armhf
+          path: ./streamium-server
           name: streamium-server_armhf
 
   build-amd64:
