@@ -195,10 +195,15 @@ pub fn create_file(
         album: new_album,
         track_number: new_track_number,
     };
+
     let result = diesel::insert_into(nodes::table)
-        .values(&new_file_node)
-        .get_result(conn) as QueryResult<Node>;
-    result.expect("Error saving new Node");
+    .values(&new_file_node)
+    .get_result(conn) as QueryResult<Node>;
+
+    match result {
+        Ok(node) => println!("Created: {:?}", node),
+        Err(error) => println!("Cannot create: {:?}, {:?}", new_file_node, error),
+    }
 }
 
 pub fn update_all_files(conn: &PgConnection, artist_node: &Node, album_node: &Node) {

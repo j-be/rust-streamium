@@ -9,7 +9,7 @@ pub enum Nodetypes {
     Stream
 }
 
-#[derive(Identifiable, Queryable, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Serialize, Deserialize, Debug)]
 pub struct Node {
     pub id: i32,
     pub title: String,
@@ -29,7 +29,7 @@ pub struct SimpleNode<'a> {
     pub node_type: Nodetypes,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Debug)]
 #[table_name="nodes"]
 pub struct FileNode<'a> {
     pub title: &'a str,
