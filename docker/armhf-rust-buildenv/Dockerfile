@@ -5,7 +5,7 @@
 # 	https://whitfin.io/speeding-up-rust-docker-builds/
 
 ########################## BUILD IMAGE  ##########################
-FROM ghcr.io/j-be/rust-diesel-postgres:armv7 as build
+FROM ghcr.io/j-be/rust-diesel-postgres:1.64-armv7 as build
 
 # Copies the complete project
 # To avoid copying unneeded files, use .dockerignore
@@ -14,7 +14,9 @@ COPY ./rust-toolchain ./rust-toolchain
 
 RUN rustup target add armv7-unknown-linux-gnueabihf
 
+WORKDIR /app/streamium-server
 
-# Builds again, this time it'll just be
-# your actual source files being built
-RUN cd streamium-server && cargo build --release --target=armv7-unknown-linux-gnueabihf
+RUN apt-get install -y libpq-dev:amd64
+RUN cargo build --release --target=armv7-unknown-linux-gnueabihf || true
+RUN apt-get install -y libpq-dev:armhf
+RUN cargo build --release --target=armv7-unknown-linux-gnueabihf
