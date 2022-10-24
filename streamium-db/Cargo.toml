@@ -1,6 +1,6 @@
 [package]
 name = "streamium-db"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Juri Berlanda <juriberlanda@hotmail.com>"]
 edition = "2018"
 
